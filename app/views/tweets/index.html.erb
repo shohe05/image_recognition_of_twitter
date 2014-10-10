@@ -1,0 +1,8 @@
+<h1>こんにちはこんにちは!</h1>
+<% unless @current_user.present? %>
+  <a href="/auth/twitter">Twitter にサインインする</a>
+<% else %>
+  <p><%= @current_user.name %>さん</p>
+  <%# <%= debug(@current_user.methods) %>
+  <a href="/signout">サインアウト</a>
+<% end %>

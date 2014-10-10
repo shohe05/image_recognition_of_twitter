@@ -1,0 +1,68 @@
+<div id="images"></div>
+
+<script type="text/javascript">
+
+var twitter = new Twitter();
+
+$(function(){
+  console.count("連続実行回数");
+  setInterval("reload()", 450000);
+  // setInterval("reload()", 900000);
+  var year = Math.floor(Math.random() * (2013 - 2010) + 2010);
+  var month = Math.floor(Math.random() * (12 - 1) + 1);
+  var day = Math.floor(Math.random() * (30 - 1) + 1);
+  if (month < 10) month = '0' + month;
+  if (day < 10) day = '0' + day;
+  var content = { count: "100", callback: "update" };
+  twitter.get("https://api.twitter.com/1.1/search/tweets.json?q=filter%3Aimages&lang=ja&include_entities=true", content)
+  console.log(year, month, day);
+  twitter.get("https://api.twitter.com/1.1/search/tweets.json?q=filter%3Aimages&lang=ja&include_entities=true&since=" + year + "-" + month + "-" + day, content)
+  // twitter.get("https://api.twitter.com/1.1/search/tweets.json?q=filter%3Aimages%20from%3AMaple_SKM&lang=ja&count=1000000&include_entities=true", content)
+});
+
+$(window).bind('finishGettingImages', function(e, tweets) {
+  var images = new Array();
+  console.log(tweets);
+  for( var i = 0; i < tweets.statuses.length; i++ ) {
+    if (tweets.statuses[i].entities.media) {
+      var image = new Image();
+      image.url = tweets.statuses[i].entities.media[0].media_url;
+      image.tweet_url = tweets.statuses[i].entities.media[0].expanded_url;
+      image.posted_at = tweets.statuses[i].created_at;
+      var tags_str = recognize_image(tweets.statuses[i].entities.media[0].media_url);
+      tags_str = tags_str.replace(/\[|\]|"/g, '');
+      var tags = tags_str.split(', ')
+      image.tags = tags;
+      // console.log(image);
+      // console.log(image.tags);
+      images.push(image);
+      $.ajax({
+        url: "images/",
+        data: { url: image.url, tweet_url: image.tweet_url, posted_at: image.posted_at, tweet: tweets.statuses[i], tags: image.tags },
+        type: "post"
+      });
+      updateDom(image);
+    }
+  }
+  console.dir(images);
+})
+
+function updateDom(image) {
+  $("#images").append("<a href='" + image.tweet_url + "'>" + "<img src='" + image.url + "' width='300' height='300'></a>");
+  for (i = 0; i < image.tags.length; i++) {
+    $("#images").append('<p>' + image.tags[i] + '</p>');
+    /*
+    $.ajax({
+      url: "tags/",
+      data: { name: image.tags[i], image_url: image.url },
+      type: "post",
+      async: false
+    });
+    */
+  }
+}
+
+function reload(){
+  location.reload();
+}
+</script>

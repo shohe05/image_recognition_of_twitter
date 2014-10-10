@@ -5,9 +5,16 @@
   <%= stylesheet_link_tag    'application', media: 'all' %>
   <%= javascript_include_tag 'application' %>
   <%= csrf_meta_tags %>
+  <script src='/assets/underscore.js'></script>
+  <script src='/assets/oauth.js'></script>
+  <script src='/assets/sha1.js'></script>
+  <script src='/assets/search.js'></script>
+  <script src='/assets/image.js'></script>
+  <script src='/assets/image_recognition.js'></script>
 </head>
 <body>
-
+  <h2>総画像数<%= @images.size %></h2>
+  <h2>総タグ数<%= @tags.size %></h2>
 <%= yield %>
 
 </body>

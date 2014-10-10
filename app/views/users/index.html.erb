@@ -1,0 +1,82 @@
+<input type='text' id='username'>
+<button id='search'>検索</button>
+<div id="images"></div>
+
+<script type="text/javascript" >
+
+var content = { count: "200", callback: "update" };
+var twitter = new Twitter();
+
+$("#search").on('click', function(){
+  var username = $("#username").val();
+  $("#images").append("<p>" + username + "で検索</p>")
+  twitter.get("https://api.twitter.com/1.1/search/tweets.json?q=filter%3Aimages%20from%3A" + username + "&lang=ja&count=1000000&include_entities=true", content);
+  // twitter.get("https://api.twitter.com/1.1/search/tweets.json?q=filter%3Aimages%20from%3AMaple_SKM&lang=ja&count=1000000&include_entities=true", content);
+});
+
+$(window).bind('finishGettingImages', function(e, tweets) {
+  var images = new Array();
+  for( var i = 0; i < tweets.statuses.length; i++ ) {
+    if (tweets.statuses[i].entities.media) {
+      var image = new Image();
+      image.url = tweets.statuses[i].entities.media[0].media_url;
+      image.tweet_url = tweets.statuses[i].entities.media[0].expanded_url;
+      image.posted_at = tweets.statuses[i].created_at;
+      var tags_str = recognize_image(tweets.statuses[i].entities.media[0].media_url);
+      tags_str = tags_str.replace(/\[|\]|"/g, '');
+      var tags = tags_str.split(', ')
+      image.tags = tags;
+      // console.log(image);
+      // console.log(image.tags);
+      images.push(image);
+      updateDom(image);
+    }
+  }
+  console.dir(images);
+  bindTagSearchEvent();
+})
+
+
+var counter = count(0);
+function updateDom(image) {
+  var i = counter();
+  $("#images").append('<div id="div' + i + '"></div>');
+  $("#div" + i).append("<a href='" + image.tweet_url + "'>" + "<img src='" + image.url + "' width='300' height='300'></a>");
+  $("#div" + i).append("<button class='tag_search' id='" + i + "' value='" + JSON.stringify(image.tags) + "'>" + "この写真と似た写真を探す" + ' </button>');
+  for (j = 0; j < image.tags.length; j++) {
+    $("#div" + i).append('<span>' + image.tags[j] + ' </span>');
+  }
+  $("#images").append('<br>');
+}
+
+function bindTagSearchEvent(){
+  $(".tag_search").on("click", function(e){
+    console.log('search begin!');
+    $.ajax({
+      'url': "images/search_by_tag",
+      'data': {'tags': JSON.parse($(this).attr("value")), 'id': $(this).attr("id")},
+      'type': 'get'
+    }).done(function(data){
+      console.log('search done!');
+      console.log(data);
+      // var counter2 = count(0);
+      // var i = counter2();
+      $("#div" + data.id).append('<h2>similar images</h2>');
+      _.each(data.results, function(result){
+        $("#div" + data.id).append("<h2>tag matched</h2>");
+        _.each(result.matches, function(tag){
+          $("#div" + data.id).append('<span>' + tag + ' </span>');
+        })
+        $("#div" + data.id).append("<a href='" + result.image.tweet_url + "'>" + "<img src='" + result.image.url + "' width='300' height='300'></a>");
+      })
+    })
+  })
+}
+
+function count(n){
+  var c = n;
+  return function() {
+    return ++c;
+  }
+}
+</script>
