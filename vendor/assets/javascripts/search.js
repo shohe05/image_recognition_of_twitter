@@ -36,7 +36,7 @@ Twitter.prototype.get = function(api, content) {
       'dataType': "jsonp",
       'jsonp': false,
       'cache': true,
-      'async': false
+      // 'async': false
     });
 }
 
